@@ -219,6 +219,32 @@ docker-compose down -v
 
 ### Troubleshooting
 
+**Error: "unable to get image" or "cannot find the file specified" (Windows):**
+```bash
+# Solution 1: Ensure Docker Desktop is running
+# - Check system tray for Docker whale icon
+# - Right-click and select "Restart Docker Desktop"
+
+# Solution 2: Verify WSL 2 backend
+# - Open Docker Desktop Settings → General
+# - Ensure "Use the WSL 2 based engine" is checked
+# - Restart Docker Desktop
+
+# Solution 3: Rebuild containers
+docker-compose down
+docker-compose up -d --build
+
+# Solution 4: Clean Docker cache (if above doesn't work)
+docker system prune -a
+docker-compose up -d --build
+```
+
+**Error: "version attribute is obsolete":**
+```bash
+# This warning is now fixed in the docker-compose.yml
+# Simply run: docker-compose up -d
+```
+
 **Ports already in use:**
 ```bash
 # Check what's using the ports
