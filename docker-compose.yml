@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # MongoDB Database
   mongodb:
@@ -14,6 +12,11 @@ services:
       - MONGO_INITDB_DATABASE=test_database
     networks:
       - routebuddy-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   # Backend API
   backend:
@@ -28,11 +31,17 @@ services:
       - MONGO_URL=mongodb://mongodb:27017
       - DB_NAME=test_database
     depends_on:
-      - mongodb
+      mongodb:
+        condition: service_healthy
     volumes:
       - ./backend:/app
     networks:
       - routebuddy-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/docs"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   # Frontend Expo App
   frontend:
@@ -49,8 +58,10 @@ services:
     environment:
       - EXPO_PUBLIC_BACKEND_URL=http://localhost:8001
       - EXPO_DEVTOOLS_LISTEN_ADDRESS=0.0.0.0
+      - REACT_NATIVE_PACKAGER_HOSTNAME=localhost
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     volumes:
       - ./frontend:/app
       - /app/node_modules
