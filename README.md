@@ -64,13 +64,70 @@ routebuddy/
 
 ## 🚀 Quick Start
 
-### Prerequisites
+### 🐳 Option 1: Run with Docker (Recommended)
+
+**No version conflicts, no dependency issues - everything just works!**
+
+#### Prerequisites
+- Docker Desktop installed ([Download here](https://www.docker.com/products/docker-desktop))
+- Docker Compose v2.0+
+- 8GB RAM minimum
+
+#### Start the Application
+
+```bash
+# Clone the repository
+git clone https://github.com/Jatin546/routebuddy-mobile-app.git
+cd routebuddy-mobile-app
+
+# Start all services (MongoDB, Backend, Frontend)
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# View specific service logs
+docker-compose logs -f backend   # Backend API logs
+docker-compose logs -f frontend  # Frontend/Expo logs
+docker-compose logs -f mongodb   # Database logs
+```
+
+#### Access the Application
+
+Once running, access:
+- **Frontend Web**: http://localhost:3000
+- **Backend API**: http://localhost:8001
+- **API Docs**: http://localhost:8001/docs
+- **MongoDB**: mongodb://localhost:27017
+
+#### Stop the Application
+
+```bash
+# Stop all services
+docker-compose down
+
+# Stop and remove volumes (reset database)
+docker-compose down -v
+```
+
+#### Mobile Testing with Expo Go
+
+1. Start services: `docker-compose up -d`
+2. Check frontend logs: `docker-compose logs -f frontend`
+3. Find the QR code in the logs
+4. Scan with Expo Go app on your phone
+
+---
+
+### 💻 Option 2: Run Without Docker (Manual Setup)
+
+#### Prerequisites
 - Node.js 18+
 - Python 3.11+
-- MongoDB running locally or remote connection
+- MongoDB running locally
 - Expo CLI: `npm install -g expo-cli`
 
-### Backend Setup
+#### Backend Setup
 
 ```bash
 cd backend
@@ -78,7 +135,7 @@ pip install -r requirements.txt
 uvicorn server:app --host 0.0.0.0 --port 8001 --reload
 ```
 
-### Frontend Setup
+#### Frontend Setup
 
 ```bash
 cd frontend
@@ -86,7 +143,7 @@ yarn install
 yarn start
 ```
 
-### Environment Variables
+#### Environment Variables
 
 **Backend (.env):**
 ```
@@ -97,6 +154,67 @@ DB_NAME=test_database
 **Frontend (.env):**
 ```
 EXPO_PUBLIC_BACKEND_URL=http://localhost:8001
+```
+
+---
+
+## 🐳 Docker Commands
+
+### Development Commands
+
+```bash
+# Rebuild containers after code changes
+docker-compose up -d --build
+
+# Restart a specific service
+docker-compose restart backend
+docker-compose restart frontend
+
+# Access container shell
+docker-compose exec backend bash      # Backend container
+docker-compose exec frontend sh       # Frontend container
+docker-compose exec mongodb mongosh   # MongoDB shell
+
+# Install new packages
+docker-compose exec backend pip install package-name
+docker-compose exec frontend yarn add package-name
+
+# View container status
+docker-compose ps
+
+# Remove everything (including volumes)
+docker-compose down -v
+```
+
+### Troubleshooting
+
+**Ports already in use:**
+```bash
+# Check what's using the ports
+lsof -i :3000
+lsof -i :8001
+lsof -i :27017
+
+# Stop and restart
+docker-compose down
+docker-compose up -d
+```
+
+**Containers won't start:**
+```bash
+# Clean up Docker
+docker system prune -a
+docker volume prune
+
+# Rebuild
+docker-compose up -d --build
+```
+
+**Frontend hot reload not working:**
+```bash
+# Clear cache and rebuild
+docker-compose down
+docker-compose up -d --build frontend
 ```
 
 ## 📱 Running on Mobile
