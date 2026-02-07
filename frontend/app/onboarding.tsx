@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
+import React, { useState, useRef, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions, Animated } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useTheme } from '../contexts/ThemeContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width } = Dimensions.get('window');
@@ -10,25 +11,57 @@ const slides = [
     title: 'Find Your Route Buddies',
     description: 'Connect with people traveling on the same route as you',
     icon: '🗺️',
-    color: '#6366F1',
   },
   {
     title: 'Safe & Verified',
     description: 'ID verification and safety features to ensure secure connections',
     icon: '🛡️',
-    color: '#EC4899',
   },
   {
     title: 'Chat & Plan Together',
     description: 'Real-time chat to coordinate your commute and plan activities',
     icon: '💬',
-    color: '#10B981',
   },
 ];
 
 export default function OnboardingScreen() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const router = useRouter();
+  const { colors, isDark } = useTheme();
+  
+  // Animation values
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(0)).current;
+  const iconScale = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    animateIn();
+  }, [currentIndex]);
+
+  const animateIn = () => {
+    fadeAnim.setValue(0);
+    slideAnim.setValue(50);
+    iconScale.setValue(0);
+
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+      Animated.spring(iconScale, {
+        toValue: 1,
+        tension: 50,
+        friction: 7,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
 
   const handleNext = async () => {
     if (currentIndex < slides.length - 1) {
@@ -45,34 +78,64 @@ export default function OnboardingScreen() {
   };
 
   const slide = slides[currentIndex];
+  const slideColors = ['#6366F1', '#EC4899', '#10B981'];
 
   return (
-    <View style={[styles.container, { backgroundColor: slide.color }]}>
+    <View style={[styles.container, { backgroundColor: isDark ? colors.card : slideColors[currentIndex] }]}>
       <TouchableOpacity style={styles.skipButton} onPress={handleSkip}>
-        <Text style={styles.skipText}>Skip</Text>
+        <Text style={[styles.skipText, { color: isDark ? colors.text : 'white' }]}>Skip</Text>
       </TouchableOpacity>
 
-      <View style={styles.content}>
-        <Text style={styles.icon}>{slide.icon}</Text>
-        <Text style={styles.title}>{slide.title}</Text>
-        <Text style={styles.description}>{slide.description}</Text>
-      </View>
+      <Animated.View 
+        style={[
+          styles.content,
+          {
+            opacity: fadeAnim,
+            transform: [{ translateY: slideAnim }]
+          }
+        ]}
+      >
+        <Animated.Text 
+          style={[
+            styles.icon,
+            {
+              transform: [{ scale: iconScale }]
+            }
+          ]}
+        >
+          {slide.icon}
+        </Animated.Text>
+        <Text style={[styles.title, { color: isDark ? colors.text : 'white' }]}>
+          {slide.title}
+        </Text>
+        <Text style={[styles.description, { color: isDark ? colors.textSecondary : 'rgba(255,255,255,0.9)' }]}>
+          {slide.description}
+        </Text>
+      </Animated.View>
 
       <View style={styles.footer}>
         <View style={styles.pagination}>
           {slides.map((_, index) => (
-            <View
+            <Animated.View
               key={index}
               style={[
                 styles.dot,
-                index === currentIndex && styles.activeDot,
+                {
+                  backgroundColor: isDark 
+                    ? (index === currentIndex ? colors.primary : colors.border)
+                    : (index === currentIndex ? 'white' : 'rgba(255,255,255,0.4)'),
+                  width: index === currentIndex ? 24 : 8,
+                },
               ]}
             />
           ))}
         </View>
 
-        <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
-          <Text style={styles.nextText}>
+        <TouchableOpacity 
+          style={[styles.nextButton, { backgroundColor: isDark ? colors.primary : 'white' }]} 
+          onPress={handleNext}
+        >
+          <Text style={[styles.nextText, { color: isDark ? 'white' : slideColors[currentIndex] }]}>
             {currentIndex === slides.length - 1 ? "Get Started" : "Next"}
           </Text>
         </TouchableOpacity>
@@ -92,7 +155,6 @@ const styles = StyleSheet.create({
     marginRight: 24,
   },
   skipText: {
-    color: 'white',
     fontSize: 16,
     fontWeight: '600',
   },
@@ -109,13 +171,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: 'white',
     textAlign: 'center',
     marginBottom: 16,
   },
   description: {
     fontSize: 16,
-    color: 'rgba(255,255,255,0.9)',
     textAlign: 'center',
     lineHeight: 24,
   },
@@ -128,18 +188,11 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   dot: {
-    width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: 'rgba(255,255,255,0.4)',
     marginHorizontal: 4,
   },
-  activeDot: {
-    width: 24,
-    backgroundColor: 'white',
-  },
   nextButton: {
-    backgroundColor: 'white',
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',
@@ -147,6 +200,5 @@ const styles = StyleSheet.create({
   nextText: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#6366F1',
   },
 });
