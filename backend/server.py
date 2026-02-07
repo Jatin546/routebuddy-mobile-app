@@ -579,19 +579,33 @@ async def get_connections(status: Optional[str] = None, current_user: User = Dep
     
     connections = await db.connections.find(query, {"_id": 0}).to_list(1000)
     
+    # Collect all other user IDs
+    other_user_ids = []
+    for conn in connections:
+        other_user_id = conn["user2_id"] if conn["user1_id"] == current_user.user_id else conn["user1_id"]
+        other_user_ids.append(other_user_id)
+    
+    # Batch fetch all users in a single query
+    if not other_user_ids:
+        return []
+    
+    users = await db.users.find(
+        {"user_id": {"$in": other_user_ids}},
+        {"_id": 0, "user_id": 1, "name": 1, "picture": 1, "verified": 1}
+    ).to_list(None)
+    
+    # Create user lookup dictionary
+    users_dict = {u["user_id"]: u for u in users}
+    
     # Enrich with user info
     result = []
     for conn in connections:
         other_user_id = conn["user2_id"] if conn["user1_id"] == current_user.user_id else conn["user1_id"]
-        other_user = await db.users.find_one(
-            {"user_id": other_user_id},
-            {"_id": 0, "user_id": 1, "name": 1, "picture": 1, "verified": 1}
-        )
         
-        if other_user:
+        if other_user_id in users_dict:
             result.append({
                 **conn,
-                "other_user": other_user
+                "other_user": users_dict[other_user_id]
             })
     
     return result
