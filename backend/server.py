@@ -453,7 +453,8 @@ async def get_matches(current_user: User = Depends(require_auth)):
         {"_id": 0}
     ).to_list(1000)
     
-    matches = []
+    # Collect matching user IDs first
+    potential_matches = []
     seen_users = set()
     
     for user_route_dict in user_routes:
@@ -470,25 +471,44 @@ async def get_matches(current_user: User = Depends(require_auth)):
             match_result = calculate_match_score(user_route, other_route)
             
             if match_result and match_result["score"] > 30:  # Minimum 30% match
-                # Get user info
-                other_user = await db.users.find_one(
-                    {"user_id": other_route.user_id},
-                    {"_id": 0, "user_id": 1, "name": 1, "picture": 1, "bio": 1, "verified": 1}
-                )
-                
-                if other_user and current_user.user_id not in other_user.get("blocked_users", []):
-                    matches.append({
-                        "user_id": other_user["user_id"],
-                        "name": other_user["name"],
-                        "picture": other_user.get("picture"),
-                        "bio": other_user.get("bio"),
-                        "verified": other_user.get("verified", False),
-                        "route_match_score": round(match_result["score"], 1),
-                        "distance_to_start": round(match_result["start_distance"], 2),
-                        "distance_to_end": round(match_result["end_distance"], 2)
-                    })
-                    
-                    seen_users.add(other_route.user_id)
+                potential_matches.append({
+                    "user_id": other_route.user_id,
+                    "match_result": match_result
+                })
+                seen_users.add(other_route.user_id)
+    
+    # Batch fetch all matched users in a single query
+    if not potential_matches:
+        return []
+    
+    user_ids = [m["user_id"] for m in potential_matches]
+    users = await db.users.find(
+        {"user_id": {"$in": user_ids}},
+        {"_id": 0, "user_id": 1, "name": 1, "picture": 1, "bio": 1, "verified": 1, "blocked_users": 1}
+    ).to_list(None)
+    
+    # Create user lookup dictionary
+    users_dict = {u["user_id"]: u for u in users}
+    
+    # Build final matches list
+    matches = []
+    for match in potential_matches:
+        user_id = match["user_id"]
+        match_result = match["match_result"]
+        
+        if user_id in users_dict:
+            other_user = users_dict[user_id]
+            if current_user.user_id not in other_user.get("blocked_users", []):
+                matches.append({
+                    "user_id": other_user["user_id"],
+                    "name": other_user["name"],
+                    "picture": other_user.get("picture"),
+                    "bio": other_user.get("bio"),
+                    "verified": other_user.get("verified", False),
+                    "route_match_score": round(match_result["score"], 1),
+                    "distance_to_start": round(match_result["start_distance"], 2),
+                    "distance_to_end": round(match_result["end_distance"], 2)
+                })
     
     # Sort by score (highest first)
     matches.sort(key=lambda x: x["route_match_score"], reverse=True)
