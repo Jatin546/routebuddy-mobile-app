@@ -46,23 +46,51 @@ RouteBuddy connects commuters traveling on similar routes through intelligent GP
 
 ```
 routebuddy/
-├── backend/
-│   ├── server.py              # Main FastAPI server (740 lines)
-│   ├── requirements.txt       # Python dependencies
-│   └── .env                   # Environment variables
-├── frontend/
-│   ├── app/                   # Expo Router screens
-│   │   ├── (auth)/           # Authentication screens
-│   │   ├── (tabs)/           # Main tab navigation
-│   │   ├── index.tsx         # Splash screen
-│   │   ├── onboarding.tsx    # Onboarding flow
-│   │   ├── chat.tsx          # Real-time chat
-│   │   └── ...               # Other screens
-│   ├── contexts/             # React contexts
-│   ├── utils/                # Utility functions
-│   ├── app.json              # Expo configuration
-│   └── package.json          # Dependencies
-└── docs/                     # Documentation files
+├── backend/                          # FastAPI Backend
+│   ├── .env                         # Environment variables
+│   ├── requirements.txt             # Python dependencies
+│   ├── server.py                    # Main backend server (ALL APIs)
+│   └── Dockerfile                   # Backend Docker image
+│
+├── frontend/                         # Expo Mobile App
+│   ├── app/                         # App screens (Expo Router)
+│   │   ├── (auth)/                  # Authentication group
+│   │   │   └── login.tsx           # Login screen
+│   │   ├── (tabs)/                  # Main tabs group
+│   │   │   ├── _layout.tsx         # Tab navigation
+│   │   │   ├── discover.tsx        # Discover matches
+│   │   │   ├── connections.tsx     # Connections list
+│   │   │   ├── messages.tsx        # Messages list
+│   │   │   └── profile.tsx         # User profile
+│   │   ├── _layout.tsx             # Root layout
+│   │   ├── index.tsx               # Splash screen (animated)
+│   │   ├── onboarding.tsx          # Onboarding slides (animated)
+│   │   ├── profile-setup.tsx       # Edit profile
+│   │   ├── route-setup.tsx         # Add/edit route
+│   │   ├── chat.tsx                # Chat screen
+│   │   ├── user-profile.tsx        # View other user
+│   │   ├── verify-id.tsx           # ID verification
+│   │   └── report-user.tsx         # Report user
+│   ├── contexts/                    # React contexts
+│   │   ├── AuthContext.tsx         # Authentication
+│   │   ├── SocketContext.tsx       # Socket.IO
+│   │   └── ThemeContext.tsx        # Light/Dark theme
+│   ├── utils/                       # Utilities
+│   │   └── api.ts                  # API helper
+│   ├── assets/                      # Images, fonts
+│   ├── .env                        # Environment variables
+│   ├── app.json                    # Expo config
+│   ├── package.json                # Dependencies
+│   ├── tsconfig.json               # TypeScript config
+│   ├── metro.config.js             # Metro bundler config
+│   └── Dockerfile                  # Frontend Docker image
+│
+├── docker-compose.yml               # Docker orchestration
+├── DEPLOYMENT_FIXES.md              # Deployment fixes documentation
+├── DOCKER_SETUP.md                  # Complete Docker guide
+├── README_ROUTEBUDDY.md             # Complete app documentation
+└── auth_testing.md                  # Auth testing guide
+
 ```
 
 ## 🚀 Quick Start
