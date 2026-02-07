@@ -19,6 +19,9 @@ RouteBuddy connects commuters traveling on similar routes through intelligent GP
 - 🛡️ **Safety First** - ID verification, user reporting, blocking
 - 🤝 **Connection System** - Send/accept connection requests
 - 📱 **Native Mobile Experience** - Built with Expo for iOS & Android
+- 🐳 **Docker Support** - Complete containerization with docker-compose
+- 🎨 **Light/Dark Theme** - Auto-detection and manual theme switching
+- ✨ **Smooth Animations** - Splash screen and onboarding with beautiful transitions
 
 ## 🏗️ Tech Stack
 
