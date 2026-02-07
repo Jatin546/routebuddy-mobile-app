@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  # MongoDB Database
+  mongodb:
+    image: mongo:7.0
+    container_name: routebuddy-mongodb
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    environment:
+      - MONGO_INITDB_DATABASE=test_database
+    networks:
+      - routebuddy-network
+
+  # Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: routebuddy-backend
+    restart: always
+    ports:
+      - "8001:8001"
+    environment:
+      - MONGO_URL=mongodb://mongodb:27017
+      - DB_NAME=test_database
+    depends_on:
+      - mongodb
+    volumes:
+      - ./backend:/app
+    networks:
+      - routebuddy-network
+
+  # Frontend Expo App
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: routebuddy-frontend
+    restart: always
+    ports:
+      - "3000:3000"
+      - "19000:19000"
+      - "19001:19001"
+      - "19002:19002"
+    environment:
+      - EXPO_PUBLIC_BACKEND_URL=http://localhost:8001
+      - EXPO_DEVTOOLS_LISTEN_ADDRESS=0.0.0.0
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    networks:
+      - routebuddy-network
+
+volumes:
+  mongodb_data:
+    driver: local
+
+networks:
+  routebuddy-network:
+    driver: bridge
